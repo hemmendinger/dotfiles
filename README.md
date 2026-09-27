@@ -1,24 +1,39 @@
 # dotfiles
 
+Plain git repo, no dotfiles manager. Each program's config lives here and the
+machine gets a one-line pointer to it, so an edit in this repo is live on the
+next start of the program. Syncing between machines is plain git: `sync.ps1`
+and `sync.sh` commit tracked changes, rebase onto upstream and push, and stop
+with a note in `.sync.log` on a conflict. Run them by hand or from whatever
+scheduler you like (Task Scheduler, cron, launchd).
+
 ## Emacs
 
-`emacs/init.el` is the Emacs init file. On Windows, Emacs reads it as
-`%APPDATA%\.emacs` (that is where `~` resolves when `HOME` is not set), so the
-file is symlinked there.
+`emacs/init.el` is the whole config; it branches on `system-type` for OS
+differences. Emacs finds it through a stub `~/.emacs` containing only
+`(load "<repo>/emacs/init.el")`. Customize output goes to `custom.el` in
+`user-emacs-directory` (per machine, not in the repo).
 
-To set up the link on a Windows machine, open a normal PowerShell window
-(Developer Mode or an elevated shell is required for symlinks) and run:
+### Windows
+
+Open a normal PowerShell window (not a shell inside the Claude desktop app,
+which sees a virtualized `AppData\Roaming`; the script detects that and
+refuses) and run:
 
 ```powershell
-.\install.ps1
+G:\projects\dotfiles\install.ps1
 ```
 
-Run it from a regular terminal, not from a shell inside the Claude desktop app:
-that app is a packaged (MSIX) app whose child processes see a virtualized copy
-of `AppData\Roaming`, so anything written there never reaches the real folder.
-The script checks for this and refuses to run in that case.
+This writes `%APPDATA%\.emacs`, backing up any existing file as
+`.emacs.pre-dotfiles`.
 
-Not tracked here, on purpose: `%APPDATA%\.emacs.d\` holds installed packages
-(`elpa`), the saved desktop session, auto-save lists and backups. Packages are
-listed in `package-selected-packages` inside `init.el`, so on a new machine run
-`M-x package-install-selected-packages` to restore them.
+### macOS / Linux
+
+```sh
+git clone https://github.com/hemmendinger/dotfiles.git ~/projects/dotfiles
+~/projects/dotfiles/install.sh
+```
+
+Not tracked, on purpose: `.emacs.d` (packages, saved desktop, backups). Packages
+are listed in `package-selected-packages` in `init.el`; on a new machine run
+`M-x package-install-selected-packages`.

@@ -1,52 +1,36 @@
-# Links this repo's Emacs config into place on Windows:
-#   %APPDATA%\.emacs  ->  <repo>\emacs\init.el
-# Emacs on Windows reads ~/.emacs, and with HOME unset (the normal case when
-# Emacs is started from the Start menu) ~ resolves to %APPDATA%. If you set
-# HOME for Emacs, change $emacsHome below.
-# Needs Developer Mode enabled or an elevated shell. Uses mklink because
-# Windows PowerShell 5.1's New-Item cannot create symlinks under Developer
-# Mode without elevation.
+# Sets up Emacs to use this repo on Windows by writing a one-line stub at
+# %APPDATA%\.emacs that loads emacs/init.el from this checkout (Emacs reads
+# %APPDATA%\.emacs when HOME is not set). No symlinks, no admin, no Developer
+# Mode needed. Safe to re-run.
 $ErrorActionPreference = 'Stop'
 
-$target = Join-Path $PSScriptRoot 'emacs\init.el'
+$repo = $PSScriptRoot
+$target = (Join-Path $repo 'emacs/init.el').Replace([char]92, '/')
 $emacsHome = $env:APPDATA
-$link = Join-Path $emacsHome '.emacs'
+$stub = Join-Path $emacsHome '.emacs'
+$stubBody = ";; Managed by $repo\install.ps1 -- the real config is in the dotfiles repo.`r`n(load `"$target`")`r`n"
 
-# Refuse to run where AppData\Roaming is virtualized, e.g. in a shell spawned
-# by a packaged (MSIX) app such as the Claude desktop app. Such shells write to
-# <package>\LocalCache\Roaming instead of the real folder Emacs reads, and
-# symlinks created there do not even resolve. Detect it by writing a probe file
-# and looking for it in every package's overlay folder.
+# Refuse to run where AppData\Roaming is virtualized (e.g. a shell spawned by a
+# packaged app such as the Claude desktop app): writes there land in the app's
+# private cache, not the folder Emacs reads. Detect it with a probe file.
 $probeName = '.dotfiles-probe-' + [guid]::NewGuid().ToString('N')
 $probe = Join-Path $emacsHome $probeName
 [IO.File]::WriteAllText($probe, 'probe')
 try {
     $shadow = Get-ChildItem -LiteralPath (Join-Path $env:LOCALAPPDATA 'Packages') -Directory -Force -ErrorAction SilentlyContinue |
         ForEach-Object { Join-Path $_.FullName "LocalCache\Roaming\$probeName" } |
-        Where-Object { Test-Path -LiteralPath $_ } |
-        Select-Object -First 1
-} finally {
-    [IO.File]::Delete($probe)
-}
-if ($shadow) {
-    throw "AppData\Roaming is virtualized in this shell (the probe landed in $shadow). Run install.ps1 from a normal PowerShell window."
-}
+        Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+} finally { [IO.File]::Delete($probe) }
+if ($shadow) { throw "AppData\Roaming is virtualized in this shell (probe landed in $shadow). Run install.ps1 from a normal PowerShell window." }
 
-if (Test-Path -LiteralPath $link) {
-    $item = Get-Item -LiteralPath $link -Force
-    if ($item.LinkType -eq 'SymbolicLink' -and "$($item.Target)" -eq $target) {
-        Write-Output "Already linked: $link -> $target"
-        return
+if ((Test-Path -LiteralPath $stub) -and ([IO.File]::ReadAllText($stub) -eq $stubBody)) {
+    Write-Output "Stub already in place: $stub"
+} else {
+    if (Test-Path -LiteralPath $stub) {
+        $backup = "$stub.pre-dotfiles"
+        Move-Item -LiteralPath $stub -Destination $backup
+        Write-Output "Moved existing $stub to $backup (compare it against emacs\init.el before deleting)"
     }
-    $backup = "$link.pre-dotfiles"
-    Move-Item -LiteralPath $link -Destination $backup
-    Write-Output "Moved existing $link to $backup"
+    [IO.File]::WriteAllText($stub, $stubBody, [Text.Encoding]::ASCII)
+    Write-Output "Wrote stub $stub -> $target"
 }
-
-cmd /c mklink "$link" "$target" | Out-Null
-if ($LASTEXITCODE -ne 0) { throw "mklink failed with exit code $LASTEXITCODE" }
-
-# Make sure the link actually resolves before declaring success.
-try { [void](Get-Content -LiteralPath $link -TotalCount 1 -ErrorAction Stop) }
-catch { throw "Created $link but it does not resolve: $($_.Exception.Message.Trim())" }
-Write-Output "Linked $link -> $target"

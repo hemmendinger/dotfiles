@@ -1,3 +1,8 @@
+;; This file lives in the dotfiles repo and is loaded via a one-line stub in
+;; ~/.emacs. Keep Customize output out of it: write it to a per-machine
+;; custom.el in user-emacs-directory instead (loaded at the end of this file).
+(setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+
 ;; Auto restore last desktop
 (desktop-save-mode 1)
 
@@ -45,3 +50,5 @@
  ;; If there is more than one, they won't work right.
  )
 (put 'set-goal-column 'disabled nil)
+
+(load custom-file 'noerror)
