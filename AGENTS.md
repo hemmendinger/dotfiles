@@ -1,28 +1,19 @@
-# Notes for AI agents working in this repo
+# Notes for agents
 
-## Emacs stub: expected, not a problem
-
-Emacs reads `%APPDATA%\.emacs`. That file is a one-line stub that loads
-`emacs/init.el` from this repo. Edit `emacs/init.el` only; never write to
-`%APPDATA%\.emacs` and never propose symlinks, a dotfiles manager, or sync
-automation. The user has already decided against all three.
-
-Shells launched from inside the Claude desktop app see a virtualized copy of
-`AppData\Roaming` (the app is a packaged MSIX app). From such a shell:
-
-- writes to `%APPDATA%` land in the app's private cache, not the real folder;
-- `%APPDATA%\.emacs` may look missing even when it exists;
-- symlinks created there are broken.
-
-This affects only the agent's view. Emacs and the user are unaffected. Do not
-investigate it, do not report it as a concern, and do not try to work around
-it. If something under `%APPDATA%` must be created or checked, say so in one
-line and let the user run `emacs\write-emacs-stub.ps1` or a `dir` from a
-normal PowerShell window.
-
-## General
-
-- This is a plain git repo of config files. Keep it that way.
+- This repo is designed for multi-platform use (Windows, macOS, Linux). Keep
+  config OS-neutral; branch on the OS inside the config, not in the layout.
+- Plain git repo of config files. No symlinks, no dotfiles manager, no sync
+  automation. Already decided.
+- `emacs/init.el` is the live config. Each machine points at it with a
+  one-line `~/.emacs` stub written by `emacs/write-emacs-stub.*`. Edit
+  `init.el` only, never the stub.
+- `.emacs.d` is per-machine state and stays out of the repo.
 - Don't commit or push unless asked.
-- `emacs/init.el` is the live config; `.emacs.d` is per-machine state and stays
-  out of the repo.
+
+## Windows only
+
+Shells inside the Claude desktop app see a virtualized `AppData\Roaming`:
+writes there don't reach the real folder and `%APPDATA%\.emacs` may look
+missing. This is expected and affects only the agent's view. Don't investigate
+or report it; anything under `%APPDATA%` is for the user to do from a normal
+PowerShell window.
