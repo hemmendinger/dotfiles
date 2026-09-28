@@ -1,14 +1,14 @@
-# Sets up Emacs to use this repo on Windows by writing a one-line stub at
-# %APPDATA%\.emacs that loads emacs/init.el from this checkout (Emacs reads
-# %APPDATA%\.emacs when HOME is not set). No symlinks, no admin, no Developer
+# Writes the one-line stub that makes Emacs load this repo's config. On Windows
+# the stub is %APPDATA%\.emacs (Emacs reads it when HOME is not set) and it
+# loads the init.el next to this script. No symlinks, no admin, no Developer
 # Mode needed. Safe to re-run.
 $ErrorActionPreference = 'Stop'
 
 $repo = $PSScriptRoot
-$target = (Join-Path $repo 'emacs/init.el').Replace([char]92, '/')
+$target = (Join-Path $repo 'init.el').Replace([char]92, '/')
 $emacsHome = $env:APPDATA
 $stub = Join-Path $emacsHome '.emacs'
-$stubBody = ";; Managed by $repo\install.ps1 -- the real config is in the dotfiles repo.`r`n(load `"$target`")`r`n"
+$stubBody = ";; Written by write-emacs-stub.ps1 in $repo -- the real config is in the dotfiles repo.`r`n(load `"$target`")`r`n"
 
 # Refuse to run where AppData\Roaming is virtualized (e.g. a shell spawned by a
 # packaged app such as the Claude desktop app): writes there land in the app's
@@ -21,7 +21,7 @@ try {
         ForEach-Object { Join-Path $_.FullName "LocalCache\Roaming\$probeName" } |
         Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
 } finally { [IO.File]::Delete($probe) }
-if ($shadow) { throw "AppData\Roaming is virtualized in this shell (probe landed in $shadow). Run install.ps1 from a normal PowerShell window." }
+if ($shadow) { throw "AppData\Roaming is virtualized in this shell (probe landed in $shadow). Run write-emacs-stub.ps1 from a normal PowerShell window." }
 
 if ((Test-Path -LiteralPath $stub) -and ([IO.File]::ReadAllText($stub) -eq $stubBody)) {
     Write-Output "Stub already in place: $stub"
@@ -29,7 +29,7 @@ if ((Test-Path -LiteralPath $stub) -and ([IO.File]::ReadAllText($stub) -eq $stub
     if (Test-Path -LiteralPath $stub) {
         $backup = "$stub.pre-dotfiles"
         Move-Item -LiteralPath $stub -Destination $backup
-        Write-Output "Moved existing $stub to $backup (compare it against emacs\init.el before deleting)"
+        Write-Output "Moved existing $stub to $backup (compare it against init.el before deleting)"
     }
     [IO.File]::WriteAllText($stub, $stubBody, [Text.Encoding]::ASCII)
     Write-Output "Wrote stub $stub -> $target"

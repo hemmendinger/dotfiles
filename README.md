@@ -18,7 +18,7 @@ which sees a virtualized `AppData\Roaming`; the script detects that and
 refuses) and run:
 
 ```powershell
-G:\projects\dotfiles\install.ps1
+G:\projects\dotfiles\emacs\write-emacs-stub.ps1
 ```
 
 This writes `%APPDATA%\.emacs`, backing up any existing file as
@@ -28,7 +28,7 @@ This writes `%APPDATA%\.emacs`, backing up any existing file as
 
 ```sh
 git clone https://github.com/hemmendinger/dotfiles.git ~/projects/dotfiles
-~/projects/dotfiles/install.sh
+~/projects/dotfiles/emacs/write-emacs-stub.sh
 ```
 
 Not tracked, on purpose: `.emacs.d` (packages, saved desktop, backups). Packages
