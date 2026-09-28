@@ -2,10 +2,7 @@
 
 Plain git repo, no dotfiles manager. Each program's config lives here and the
 machine gets a one-line pointer to it, so an edit in this repo is live on the
-next start of the program. Syncing between machines is plain git: `sync.ps1`
-and `sync.sh` commit tracked changes, rebase onto upstream and push, and stop
-with a note in `.sync.log` on a conflict. Run them by hand or from whatever
-scheduler you like (Task Scheduler, cron, launchd).
+next start of the program.
 
 ## Emacs
 
