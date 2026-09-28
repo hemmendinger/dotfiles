@@ -20,5 +20,5 @@
 
 Shells inside the Claude desktop app see a virtualized `AppData\Roaming`:
 writes there don't reach the real folder and files there may look missing. This
-is expected and affects only the agent's view. Don't investigate or report it;
+is expected and affects only the agent's view. Don't investigate or report it unless it is causing a problem;
 anything under `%APPDATA%` is for the user to do from a normal PowerShell window.
