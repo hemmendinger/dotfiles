@@ -14,6 +14,11 @@
 - Machine-generated state (caches, sessions, installed packages) stays out.
 - Don't commit or push unless asked.
 
+## Style
+
+- Prefer bullet points over paragraphs when presenting information for review,
+  in chat and in notes files such as `emacs/TODO.md`.
+
 ## Emacs
 
 - `emacs/init.el` is the live config. Each machine points at it with a
